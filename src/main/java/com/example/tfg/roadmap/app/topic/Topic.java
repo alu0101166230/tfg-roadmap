@@ -15,8 +15,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity 
+@Getter
+@Setter
 @Table(name = "topics")
 public class Topic {
 
@@ -26,6 +30,7 @@ public class Topic {
 
     private String title;
     private Date deadline;
+    private String description;
 
     @ManyToOne
     @JoinColumn(name = "milestone_id", nullable = false)

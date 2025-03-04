@@ -14,7 +14,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
+
+@Getter
+@Setter
 @Entity 
 @Table(name = "milestones")
 public class Milestone {
@@ -25,7 +30,7 @@ public class Milestone {
     
     private String name;
     private Integer previousNodeId;
-    private Integer nextNodeId;
+    private String nextNodeId;
     private boolean isInitial;
     private boolean isFinal;
 
