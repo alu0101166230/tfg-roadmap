@@ -24,7 +24,7 @@ public class RoadmapService {
     public Roadmap createRoadmap(RoadmapDto dto) {
         Roadmap roadmap = new Roadmap();
         roadmap.setName(dto.getName());
-        roadmap.setOriginal(false);
+        roadmap.setOriginal(true);
 
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
