@@ -1,7 +1,7 @@
 package com.example.tfg.roadmap.app.resource;
 
 import com.example.tfg.roadmap.app.topic.Topic;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,5 +28,6 @@ public class Resource {
 
     @ManyToOne
     @JoinColumn(name = "topic_id", nullable = false)
+    @JsonBackReference(value = "topic-resources")
     private Topic topic;
 }

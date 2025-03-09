@@ -2,10 +2,10 @@ package com.example.tfg.roadmap.app.topic;
 
 import java.sql.Date;
 import java.util.List;
-
 import com.example.tfg.roadmap.app.milestone.Milestone;
 import com.example.tfg.roadmap.app.resource.Resource;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,8 +34,10 @@ public class Topic {
 
     @ManyToOne
     @JoinColumn(name = "milestone_id", nullable = false)
+    @JsonBackReference(value = "milestone-topics")
     private Milestone milestone;
 
     @OneToMany(mappedBy = "topic", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "topic-resources")
     private List<Resource> resources;
 }

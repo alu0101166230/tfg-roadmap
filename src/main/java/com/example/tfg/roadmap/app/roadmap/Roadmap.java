@@ -1,10 +1,10 @@
 package com.example.tfg.roadmap.app.roadmap;
 
 import java.util.List;
-
 import com.example.tfg.roadmap.app.milestone.Milestone;
 import com.example.tfg.roadmap.app.user.User;
-
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -28,13 +28,14 @@ public class Roadmap {
     private Long id;
     
     private String name;
-
     private boolean isOriginal;
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonBackReference(value = "user-roadmaps")
     private User user;
 
     @OneToMany(mappedBy = "roadmap", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "roadmap-milestones")
     private List<Milestone> milestones;
 }

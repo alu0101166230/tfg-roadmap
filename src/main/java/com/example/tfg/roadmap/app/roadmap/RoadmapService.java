@@ -27,6 +27,10 @@ public class RoadmapService {
     private final UserRepository userRepository;
     private final MilestoneRepository milestoneRepository;
 
+    public List<Roadmap> getOriginalRoadmaps() {
+        return roadmapRepository.findByIsOriginalTrue();
+    }
+    
     public Roadmap createRoadmap(RoadmapDto dto) {
 
         Roadmap roadmap = new Roadmap();

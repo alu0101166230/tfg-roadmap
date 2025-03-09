@@ -1,9 +1,8 @@
 package com.example.tfg.roadmap.app.user;
 
 import java.util.List;
-
 import com.example.tfg.roadmap.app.roadmap.Roadmap;
-
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -29,5 +28,6 @@ public class User {
     private String password;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference(value = "user-roadmaps")
     private List<Roadmap> roadmaps;
 }
