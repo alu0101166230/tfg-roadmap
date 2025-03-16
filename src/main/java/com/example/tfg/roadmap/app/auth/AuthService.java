@@ -30,7 +30,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public boolean login(String username, String password) throws NoSuchAlgorithmException {
+    public Long login(String username, String password) throws NoSuchAlgorithmException {
         MessageDigest md = MessageDigest.getInstance("SHA-256");
         byte[] hashedBytes = md.digest(password.getBytes());
         String hashPass = Base64.getEncoder().encodeToString(hashedBytes);
@@ -38,7 +38,7 @@ public class AuthService {
         Optional<User> user =  userRepository.findByUsernameAndPassword(username, hashPass);
         
 
-        return user.isPresent()? true: false; 
+        return user.isPresent()? user.get().getId() : -1;
 
 
     }

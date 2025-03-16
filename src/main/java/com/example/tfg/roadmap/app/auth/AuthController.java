@@ -3,6 +3,7 @@ package com.example.tfg.roadmap.app.auth;
 import java.security.NoSuchAlgorithmException;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -14,20 +15,21 @@ import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/v1/auth")
+@CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(
+    public ResponseEntity<Long> login(
         @RequestBody LoginDto user
         ) throws NoSuchAlgorithmException {
-            boolean isAuthenticated = authService.login(user.getUsername(),user.getPassword());
+            Long isAuthenticated = authService.login(user.getUsername(),user.getPassword());
 
-            return isAuthenticated? 
-            ResponseEntity.ok("User logged successfully!") :
-            ResponseEntity.status(404).body("User not found or invalid credentials.");
+            return isAuthenticated != -1? 
+            ResponseEntity.ok(isAuthenticated) :
+            ResponseEntity.status(404).body((long)-1);
 
     }
 
