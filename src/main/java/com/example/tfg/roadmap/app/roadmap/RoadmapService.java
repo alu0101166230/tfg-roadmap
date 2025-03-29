@@ -154,6 +154,15 @@ public class RoadmapService {
         return newIds.toString();
     }
 
+    public Roadmap getRoadmap(Long id) {
+       Optional<Roadmap> roadmap = this.roadmapRepository.findById(id);
+
+       if (roadmap.isPresent()) {
+            return roadmap.get();
+       } 
+       return new Roadmap();
+    }
+
 
 
 }

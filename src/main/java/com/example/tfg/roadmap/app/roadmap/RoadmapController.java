@@ -43,4 +43,16 @@ public class RoadmapController {
         return ResponseEntity.ok(originalRoadmaps);
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Roadmap> getRoadmap(@PathVariable Long id) {
+        Roadmap roadmap = roadmapService.getRoadmap(id);
+
+        if (roadmap == null || roadmap.getId() == null) {
+            return ResponseEntity.notFound().build();
+        }
+    
+        return ResponseEntity.ok(roadmap);
+        
+    }
+
 }
