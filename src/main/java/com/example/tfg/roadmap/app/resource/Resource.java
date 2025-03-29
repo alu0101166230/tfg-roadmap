@@ -25,6 +25,7 @@ public class Resource {
     private String title;
     private String type;
     private boolean isComplete;
+    private String link;
 
     @ManyToOne
     @JoinColumn(name = "topic_id", nullable = false)

@@ -31,6 +31,7 @@ public class Topic {
     private String title;
     private Date deadline;
     private String description;
+    
 
     @ManyToOne
     @JoinColumn(name = "milestone_id", nullable = false)
