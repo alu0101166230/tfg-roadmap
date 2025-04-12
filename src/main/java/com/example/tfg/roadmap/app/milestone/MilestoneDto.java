@@ -10,6 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MilestoneDto {
+    private Long id;
     private String name;
     private Integer previousNodeId;
     private List<Integer> nextNodeId;

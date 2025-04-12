@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 
 import com.example.tfg.roadmap.app.milestone.Milestone;
+import com.example.tfg.roadmap.app.milestone.MilestoneDto;
 import com.example.tfg.roadmap.app.milestone.MilestoneRepository;
 import com.example.tfg.roadmap.app.resource.Resource;
 import com.example.tfg.roadmap.app.topic.Topic;
@@ -16,6 +17,8 @@ import com.example.tfg.roadmap.app.roadmap.RoadmapDto;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 import lombok.RequiredArgsConstructor;
 
@@ -32,6 +35,28 @@ public class RoadmapService {
     }
     
     public Roadmap createRoadmap(RoadmapDto dto) {
+
+
+        // obtengo el id del last milestone
+        Optional<Milestone> lastMilestone = milestoneRepository.findTopByOrderByIdDesc();
+        Long lastId = lastMilestone.map(Milestone::getId).orElse(null); //24
+        Long curretMilestoneId = lastId + 1; //25
+
+        // actualizar id the los milestones en mi entrada
+        List<MilestoneDto> milestoneWithNewid = dto.getMilestones().stream()
+        .map(milestone -> {
+            milestone.setId(milestone.getId() + curretMilestoneId); 
+            if (milestone.getPreviousNodeId() != null) {
+                milestone.setPreviousNodeId((milestone.getPreviousNodeId() +   curretMilestoneId.intValue()));
+            }
+            if (milestone.getNextNodeId() != null) {
+                milestone.setNextNodeId(milestone.getNextNodeId().stream().map(id -> id + curretMilestoneId.intValue()).toList());    
+            }
+            return milestone;
+        })
+        .toList();
+
+        dto.setMilestones(milestoneWithNewid);
 
         Roadmap roadmap = new Roadmap();
         roadmap.setName(dto.getName());
