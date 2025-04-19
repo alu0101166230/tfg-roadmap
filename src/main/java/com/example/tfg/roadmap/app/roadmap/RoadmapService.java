@@ -2,7 +2,7 @@ package com.example.tfg.roadmap.app.roadmap;
 
 import java.sql.Date;
 import java.util.stream.Collectors;
-
+import java.util.stream.IntStream;
 
 import org.springframework.stereotype.Service;
 
@@ -15,6 +15,8 @@ import com.example.tfg.roadmap.app.user.User;
 import com.example.tfg.roadmap.app.user.UserRepository;
 import com.example.tfg.roadmap.app.roadmap.RoadmapDto;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,8 +107,6 @@ public class RoadmapService {
         Optional<Roadmap> roadmapTobeClone = roadmapRepository.findById(roadmapId);
 
         if (roadmapTobeClone.isPresent()) {
-            Optional<Milestone> lastMilestone = milestoneRepository.findTopByOrderByIdDesc();
-            Long lastId = lastMilestone.map(Milestone::getId).orElse(null);
 
             Roadmap clone = roadmapTobeClone.get();
             User user = userRepository.findById(userId).get();
@@ -117,16 +117,14 @@ public class RoadmapService {
 
             List<Milestone> clonedMilestones =  clone.getMilestones().stream().map(originalMilestone -> {
                 Milestone milestoneClone = new Milestone();
+                milestoneClone.setId(originalMilestone.getId());
                 milestoneClone.setName(originalMilestone.getName());
                 milestoneClone.setInitial(originalMilestone.isInitial());
                 milestoneClone.setFinal(originalMilestone.isFinal());
-                if (!originalMilestone.isInitial()) {
-                    milestoneClone.setPreviousNodeId(originalMilestone.getPreviousNodeId() + lastId.intValue());
-                }
-                if (originalMilestone.getNextNodeId() != null) {
-                    milestoneClone.setNextNodeId(calculateNewMilestonesId(lastId, originalMilestone.getNextNodeId()));
-                }
+                milestoneClone.setPreviousNodeId(originalMilestone.getPreviousNodeId());
+                milestoneClone.setNextNodeId(originalMilestone.getNextNodeId()); //CAN BE NULL
                 milestoneClone.setRoadmap(newRoadmap); // new roadmap reference
+
 
                 List<Topic> clonedTopics = originalMilestone.getTopics().stream().map(originalTopic -> {
                     Topic topicClone = new Topic();
@@ -150,11 +148,52 @@ public class RoadmapService {
                 milestoneClone.setTopics(clonedTopics);
                 return milestoneClone;
             }).collect(Collectors.toList());
+            clonedMilestones = updateMilestonesId(clonedMilestones);
             newRoadmap.setMilestones(clonedMilestones);
             return this.roadmapRepository.save(newRoadmap);
         }  
         return new Roadmap();
     } 
+
+    private List<Milestone> updateMilestonesId(List<Milestone> milestones) {
+        Optional<Milestone> lastMilestone = milestoneRepository.findTopByOrderByIdDesc();
+        final Long lastId = lastMilestone.map(Milestone::getId).orElse(null) + 1;
+        //final Integer idToAssing = lastId.intValue() + 1;
+
+        final Integer initialMilestoneId  = milestones.stream()
+        .filter(milestone -> milestone.isInitial())
+        .findFirst()
+        .get()
+        .getId()
+        .intValue();
+
+        Integer addFactor = lastId.intValue() - initialMilestoneId;
+
+        return milestones.stream().map(milestone -> {
+            if (milestone.getPreviousNodeId() != null) {
+                milestone.setPreviousNodeId(addFactor + milestone.getPreviousNodeId());
+            }
+            if (milestone.getNextNodeId() != null) {
+                milestone.setNextNodeId(calcualteNewNextNodeId(milestone.getNextNodeId(), addFactor));
+            }
+            milestone.setId(null);
+            return milestone;
+        }).toList();
+    }
+
+    public String calcualteNewNextNodeId(String input, Integer increment) {
+        String[] parts = input.split(",");
+        StringBuilder result = new StringBuilder();
+    
+        for (int i = 0; i < parts.length; i++) {
+            long updatedValue = Long.parseLong(parts[i].trim()) + increment;
+            result.append(updatedValue);
+            if (i < parts.length - 1) {
+                result.append(",");
+            }
+        }
+        return result.toString();
+    }
 
     private String calculateNewMilestonesId(Long lastMilestoneID, String nextNodeId) {
         // Split the nextNodeId string by commas
