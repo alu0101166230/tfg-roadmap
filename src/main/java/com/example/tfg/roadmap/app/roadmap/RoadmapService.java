@@ -4,13 +4,18 @@ import java.sql.Date;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.example.tfg.roadmap.app.milestone.Milestone;
 import com.example.tfg.roadmap.app.milestone.MilestoneDto;
 import com.example.tfg.roadmap.app.milestone.MilestoneRepository;
 import com.example.tfg.roadmap.app.resource.Resource;
+import com.example.tfg.roadmap.app.resource.ResourceDto;
+import com.example.tfg.roadmap.app.resource.ResourceRepository;
 import com.example.tfg.roadmap.app.topic.Topic;
+import com.example.tfg.roadmap.app.topic.TopicDto;
+import com.example.tfg.roadmap.app.topic.TopicRepository;
 import com.example.tfg.roadmap.app.user.User;
 import com.example.tfg.roadmap.app.user.UserRepository;
 import com.example.tfg.roadmap.app.roadmap.RoadmapDto;
@@ -31,76 +36,89 @@ public class RoadmapService {
     private final RoadmapRepository roadmapRepository;
     private final UserRepository userRepository;
     private final MilestoneRepository milestoneRepository;
+    private final TopicRepository topicRepository; // Assuming TopicRepository exists
+    private final ResourceRepository resourceRepository; // Assuming ResourceRepository exists
 
     public List<Roadmap> getOriginalRoadmaps() {
         return roadmapRepository.findByIsOriginalTrue();
     }
     
     public Roadmap createRoadmap(RoadmapDto dto) {
-
-
-        // obtengo el id del last milestone
-        Optional<Milestone> lastMilestone = milestoneRepository.findTopByOrderByIdDesc();
-        Long lastId = lastMilestone.map(Milestone::getId).orElse(null); //24
-        Long curretMilestoneId = lastId + 1; //25
-
-        // actualizar id the los milestones en mi entrada
-        List<MilestoneDto> milestoneWithNewid = dto.getMilestones().stream()
-        .map(milestone -> {
-            milestone.setId(milestone.getId() + curretMilestoneId); 
-            if (milestone.getPreviousNodeId() != null) {
-                milestone.setPreviousNodeId((milestone.getPreviousNodeId() +   curretMilestoneId.intValue()));
-            }
-            if (milestone.getNextNodeId() != null) {
-                milestone.setNextNodeId(milestone.getNextNodeId().stream().map(id -> id + curretMilestoneId.intValue()).toList());    
-            }
-            return milestone;
-        })
-        .toList();
-
-        dto.setMilestones(milestoneWithNewid);
+        User user = userRepository.findById(dto.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
         Roadmap roadmap = new Roadmap();
         roadmap.setName(dto.getName());
-        roadmap.setOriginal(true);
-
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
         roadmap.setUser(user);
+        roadmap.setOriginal(true); 
 
-        roadmap.setMilestones(dto.getMilestones().stream().map(milestoneDto -> {
-            Milestone milestone = new Milestone();
-            milestone.setName(milestoneDto.getName());
-            milestone.setPreviousNodeId(milestoneDto.getPreviousNodeId());
-            milestone.setNextNodeId(milestoneDto.getNextNodeId() == null? 
-                null : 
-                milestoneDto.getNextNodeId().stream().map(String::valueOf).collect(Collectors.joining(",")));
-            milestone.setInitial(milestoneDto.isInitial());
-            milestone.setFinal(milestoneDto.isFinal());
-            milestone.setRoadmap(roadmap);
+        List<Milestone> milestones = dto.getMilestones().stream()
+                .map(milestoneDto -> mapMilestone(milestoneDto, roadmap))
+                .collect(Collectors.toList());
 
-            milestone.setTopics(milestoneDto.getTopics().stream().map(topicDto -> {
-                Topic topic = new Topic();
-                topic.setTitle(topicDto.getTitle());
-                topic.setDeadline(Date.valueOf(topicDto.getDeadline()));
-                topic.setMilestone(milestone);
+        List<Milestone> updatedMilestone = updateMilestonesId(milestones);
 
-                topic.setResources(topicDto.getResources().stream().map(resourceDto -> {
-                    Resource resource = new Resource();
-                    resource.setTitle(resourceDto.getTitle());
-                    resource.setType(resourceDto.getType());
-                    resource.setComplete(false);
-                    resource.setTopic(topic);
-                    return resource;
-                }).collect(Collectors.toList()));
+        updatedMilestone = updatedMilestone.stream()
+        .map(m -> {
+            m.setId(null);
+            return m;
+        })
+        .collect(Collectors.toList());
 
-                return topic;
-            }).collect(Collectors.toList()));
-
-            return milestone;
-        }).collect(Collectors.toList()));
+        roadmap.setMilestones(updatedMilestone);
 
         return roadmapRepository.save(roadmap);
+    }
+
+    
+    private Milestone mapMilestone(MilestoneDto milestoneDto, Roadmap roadmap) {
+        Milestone milestone = new Milestone();
+        milestone.setId(milestoneDto.getId());
+        milestone.setName(milestoneDto.getName());
+        milestone.setPreviousNodeId(milestoneDto.getPreviousNodeId());
+        milestone.setNextNodeId(milestoneDto.getNextNodeId());
+        milestone.setInitial(milestoneDto.isInitial());
+        milestone.setFinal(milestoneDto.isFinal());
+        milestone.setRoadmap(roadmap);  
+
+        
+        List<Topic> topics = milestoneDto.getTopics().stream()
+                .map(topicDto -> mapTopic(topicDto, milestone))
+                .collect(Collectors.toList());
+
+        milestone.setTopics(topics);
+
+        
+        
+        return milestone;
+    }
+
+    private Topic mapTopic(TopicDto topicDto, Milestone milestone) {
+        Topic topic = new Topic();
+        topic.setTitle(topicDto.getTitle());
+        topic.setDescription(topicDto.getDescription());
+        //topic.setDeadline(Date.valueOf(topicDto.getDeadline()));
+        topic.setMilestone(milestone);
+
+        
+        List<Resource> resources = topicDto.getResources().stream()
+                .map(resourceDto -> mapResource(resourceDto, topic))
+                .collect(Collectors.toList());
+
+        topic.setResources(resources);
+        
+        return topic;
+    }
+
+    // Helper method to map ResourceDto to Resource entity (do not map the ID)
+    private Resource mapResource(ResourceDto resourceDto, Topic topic) {
+        Resource resource = new Resource();
+        resource.setTitle(resourceDto.getTitle());
+        resource.setType(resourceDto.getType());
+        resource.setLink(resourceDto.getLink());
+        resource.setTopic(topic);
+        
+        return resource;
     }
 
     public Roadmap cloneRoadmap (Long roadmapId, Long userId) {

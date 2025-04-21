@@ -24,7 +24,7 @@ public class RoadmapController {
     private final RoadmapService roadmapService;
 
     @PostMapping
-    public ResponseEntity<Roadmap> create(@RequestBody RoadmapDto roadmapDto) { //TODO: OJO, no me esta poniendo el is inittial
+    public ResponseEntity<Roadmap> create(@RequestBody RoadmapDto roadmapDto) { 
         Roadmap savedRoadmap = roadmapService.createRoadmap(roadmapDto);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedRoadmap);
     }

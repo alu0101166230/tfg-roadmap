@@ -13,7 +13,7 @@ public class MilestoneDto {
     private Long id;
     private String name;
     private Integer previousNodeId;
-    private List<Integer> nextNodeId;
+    private String nextNodeId;
     private boolean isInitial;
     private boolean isFinal;
     private List<TopicDto> topics;
