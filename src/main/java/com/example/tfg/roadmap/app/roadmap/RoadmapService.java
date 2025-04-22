@@ -157,6 +157,7 @@ public class RoadmapService {
                         resourceClone.setTitle(originalResource.getTitle());
                         resourceClone.setType(originalResource.getType());
                         resourceClone.setComplete(originalResource.isComplete());
+                        resourceClone.setLink(originalResource.getLink());
                         resourceClone.setTopic(topicClone); // new topic reference
                         return resourceClone;
                     }).collect(Collectors.toList());
