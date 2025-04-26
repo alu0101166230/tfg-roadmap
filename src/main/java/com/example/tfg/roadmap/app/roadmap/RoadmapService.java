@@ -176,8 +176,13 @@ public class RoadmapService {
 
     private List<Milestone> updateMilestonesId(List<Milestone> milestones) {
         Optional<Milestone> lastMilestone = milestoneRepository.findTopByOrderByIdDesc();
-        final Long lastId = lastMilestone.map(Milestone::getId).orElse(null) + 1;
-        //final Integer idToAssing = lastId.intValue() + 1;
+        Long lastId;
+        //Long lastId = lastMilestone.map(Milestone::getId).orElse(null) + 1;
+        if (!lastMilestone.isPresent()) {
+            lastId = (long) 0;
+        } else {
+            lastId = lastMilestone.map(Milestone::getId).orElse(null) + 1;
+        }
 
         final Integer initialMilestoneId  = milestones.stream()
         .filter(milestone -> milestone.isInitial())
@@ -189,8 +194,13 @@ public class RoadmapService {
         Integer addFactor = lastId.intValue() - initialMilestoneId;
 
         return milestones.stream().map(milestone -> {
+            if (milestone.getPreviousNodeId() == "") {
+                milestone.setPreviousNodeId(null);
+            }
+
+
             if (milestone.getPreviousNodeId() != null) {
-                milestone.setPreviousNodeId(addFactor + milestone.getPreviousNodeId());
+                milestone.setPreviousNodeId(calcualteNewNextNodeId(milestone.getPreviousNodeId(), addFactor));
             }
             if (milestone.getNextNodeId() != null) {
                 milestone.setNextNodeId(calcualteNewNextNodeId(milestone.getNextNodeId(), addFactor));

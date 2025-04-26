@@ -12,7 +12,7 @@ import lombok.Setter;
 public class MilestoneDto {
     private Long id;
     private String name;
-    private Integer previousNodeId;
+    private String previousNodeId;
     private String nextNodeId;
     private boolean isInitial;
     private boolean isFinal;
